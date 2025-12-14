@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>SkinMatch · 제품 상세</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #ffe6f2 0, #f6f4ff 32%, #f5fbff 70%, #ffffff 100%);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      color: #111827;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1040px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr);
+      gap: 28px;
+    }
+
+    @media (max-width: 880px) {
+      .shell { grid-template-columns: 1fr; }
+    }
+
+    .left-panel {
+      padding: 22px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #111827, #020617);
+      color: #f9fafb;
+      box-shadow: 0 26px 55px rgba(15, 23, 42, 0.45);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 0 0, rgba(248,250,252,0.14), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(236,72,153,0.18), transparent 55%);
+      pointer-events: none;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.65);
+      color: #f9fafb;
+      cursor: pointer;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .btn:hover { background: rgba(15,23,42,0.8); }
+
+    .btn-primary {
+      padding: 12px 22px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 14px 30px rgba(79,70,229,0.35);
+      width: 100%;
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); }
+
+    .img-wrap {
+      width: 100%;
+      max-width: 320px;  
+      margin: 0 auto;    
+      border-radius: 24px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(148,163,184,0.25);
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.38);
+    }
+
+
+    .img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .pid {
+      margin-top: 12px;
+      font-size: 11px;
+      opacity: 0.75;
+      word-break: break-all;
+    }
+
+    .right-panel {
+      background: #ffffffee;
+      backdrop-filter: blur(26px);
+      border-radius: 24px;
+      padding: 22px 22px 26px;
+      box-shadow: 0 20px 40px rgba(15,23,42,0.18);
+      border: 1px solid rgba(209,213,219,0.8);
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .brand {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 14px;
+    }
+
+    .block {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+      padding: 12px 14px;
+      box-shadow: 0 6px 16px rgba(15,23,42,0.05);
+      margin-bottom: 12px;
+    }
+
+    .block h3 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .text {
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .muted {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .scores {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .score-pill {
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      padding: 10px 12px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* 리뷰 영역 높이 제한 */
+    .reviews-box {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .error {
+      font-size: 12px;
+      color: #b91c1c;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+<div class="shell">
+
+  <aside class="left-panel">
+    <div class="top-row">
+      <button class="btn" id="backBtn">← 추천으로</button>
+      <div class="muted" id="apiBadge"></div>
+    </div>
+
+    <div class="img-wrap">
+      <img id="image" alt="product image">
+    </div>
+
+    <div class="pid" id="pidText"></div>
+  </aside>
+
+  <main class="right-panel">
+    <div class="muted" id="statusText">불러오는 중...</div>
+
+    <div class="title" id="titleText"></div>
+    <div class="brand" id="brandText"></div>
+
+    <div class="block">
+      <h3>성분</h3>
+      <div class="text muted" id="ingText">성분 정보가 없습니다.</div>
+    </div>
+
+    <div class="block">
+      <h3>피부타입 점수</h3>
+      <div class="scores" id="scoresBox"></div>
+    </div>
+
+    <div class="block">
+      <h3>리뷰</h3>
+
+      <select id="reviewSort" class="btn" style="margin-bottom:8px;">
+        <option value="recent">최신순</option>
+        <option value="helpful">도움순</option>
+        <option value="rating">별점 높은순</option>
+        <option value="recommended">추천 리뷰</option>
+      </select>
+
+      <div id="reviewsList" class="text muted reviews-box">
+        리뷰를 불러오는 중...
+      </div>
+
+      <div style="display:flex; justify-content:center; margin-top:10px;">
+        <button id="reviewMoreBtn" class="btn">더보기</button>
+      </div>
+    </div>
+
+    <div class="block">
+      <a id="sephoraLink" class="btn-primary" target="_blank" rel="noreferrer noopener">
+        세포라 공식몰에서 보기
+      </a>
+    </div>
+
+    <div class="error" id="errorBox"></div>
+  </main>
+
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+let reviewOffset = 0;
+const reviewLimit = 5;
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+function safeStr(v) {
+  return (v == null ? "" : String(v)).trim();
+}
+
+document.getElementById("backBtn").onclick = () => history.back();
+
+async function loadDetail() {
+  const productId = getParam("product_id");
+  document.getElementById("apiBadge").textContent = "API: " + API_BASE;
+  document.getElementById("pidText").textContent = "product_id: " + productId;
+
+  try {
+    const res = await fetch(API_BASE + "/product/" + encodeURIComponent(productId));
+    if (!res.ok) throw new Error(res.status);
+
+    const d = await res.json();
+
+    document.getElementById("statusText").textContent = "";
+    document.getElementById("titleText").textContent = safeStr(d.product_name);
+    document.getElementById("brandText").textContent =
+      d.brand_name ? "브랜드: " + d.brand_name : "";
+
+    const img = document.getElementById("image");
+    img.src = d.image_url;
+    img.onerror = () => img.removeAttribute("src");
+
+    document.getElementById("ingText").textContent =
+      safeStr(d.ingredients) || "성분 정보가 없습니다.";
+
+    const scores = d.scores || {};
+    const labels = { combination:"복합성", dry:"건성", normal:"중성", oily:"지성" };
+
+    document.getElementById("scoresBox").innerHTML =
+      Object.keys(labels).map(k =>
+        `<div class="score-pill">
+           <span>${labels[k]}</span>
+           <span>${(scores[k] || 0).toFixed(4)}</span>
+         </div>`
+      ).join("");
+
+    const sephoraLink = document.getElementById("sephoraLink");
+    if (safeStr(d.sephora_url)) {
+      sephoraLink.href = safeStr(d.sephora_url);
+      sephoraLink.style.opacity = "1";
+      sephoraLink.style.pointerEvents = "auto";
+      sephoraLink.textContent = "세포라 공식몰에서 보기";
+    } else {
+      sephoraLink.removeAttribute("href");
+      sephoraLink.textContent = "세포라 링크 없음";
+      sephoraLink.style.opacity = "0.5";
+      sephoraLink.style.pointerEvents = "none";
+    }
+
+    loadReviews(true);
+  } catch {
+    document.getElementById("errorBox").textContent = "불러오기 실패";
+  }
+}
+
+async function loadReviews(reset=false) {
+  const productId = getParam("product_id");
+  const sort = document.getElementById("reviewSort").value;
+  const list = document.getElementById("reviewsList");
+  const btn = document.getElementById("reviewMoreBtn");
+
+  if (reset) {
+    reviewOffset = 0;
+    list.innerHTML = "";
+  }
+
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/product/${encodeURIComponent(productId)}/reviews?sort=${sort}&limit=${reviewLimit}&offset=${reviewOffset}`
+    );
+    if (!res.ok) throw new Error();
+
+    const data = await res.json();
+
+    if (!data.items.length) {
+      list.textContent = "리뷰가 없습니다.";
+      btn.style.display = "none";
+      return;
+    }
+
+    data.items.forEach(r => {
+      const meta = [];
+      if (r.rating_review != null) meta.push("별점 " + r.rating_review.toFixed(1));
+      if (r.is_recommended) meta.push("추천");
+      if (r.user_skin_type) meta.push("피부타입: " + r.user_skin_type);
+      if (r.date) meta.push(r.date.slice(0,10));
+
+      const el = document.createElement("div");
+      el.style.marginBottom = "10px";
+      el.innerHTML = `
+        <div class="muted">${meta.join(" · ")}</div>
+        <div class="text">${safeStr(r.review_text)}</div>
+      `;
+      list.appendChild(el);
+    });
+
+    reviewOffset += data.items.length;
+    btn.disabled = false;
+    if (reviewOffset >= data.total) btn.style.display = "none";
+  } catch {
+    list.textContent = "리뷰를 불러오지 못했습니다.";
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("reviewSort").onchange = () => loadReviews(true);
+document.getElementById("reviewMoreBtn").onclick = () => loadReviews(false);
+
+loadDetail();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SkinMatch · 스킨케어 추천기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                "Segoe UI", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, #ffe6f2 0, #f6f4ff 32%, #f5fbff 70%, #ffffff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 16px;
+            color: #111827;
+        }
+
+        /* 전체 화면에서 너무 좁게 몰리는 느낌을 완화 */
+        .app-shell {
+            width: 100%;
+            max-width: 1280px; /* 기존 1040px -> 확대 */
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.45fr);
+            gap: 28px;
+            margin: 0 auto;
+        }
+
+        /* 초와이드(1440px+)에서 좌측이 과하게 커지는 것을 방지 */
+        @media (min-width: 1440px) {
+            .app-shell {
+                grid-template-columns: 520px 1fr; /* 좌측은 카드 폭처럼 제한 */
+                gap: 32px;
+            }
+        }
+
+        @media (max-width: 880px) {
+            .app-shell { grid-template-columns: minmax(0, 1fr); }
+        }
+
+        /* --- 왼쪽 패널 --- */
+        .left-panel {
+            padding: 26px 24px 28px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #111827, #020617);
+            color: #f9fafb;
+            box-shadow: 0 26px 55px rgba(15, 23, 42, 0.45);
+            position: relative;
+            overflow: hidden;
+
+            /* 스크롤 시 자연스럽게 붙어있게 (원치 않으면 삭제 가능) */
+            position: sticky;
+            top: 24px;
+            align-self: start;
+        }
+
+        @media (max-width: 880px) {
+            .left-panel {
+                position: relative;
+                top: auto;
+            }
+        }
+
+        .left-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.14), transparent 55%),
+                radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.18), transparent 55%);
+            pointer-events: none;
+        }
+
+        .brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 3;
+            gap: 12px;
+        }
+
+        .brand-mark { display: inline-flex; align-items: center; gap: 10px; }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: conic-gradient(from 140deg, #6366f1, #ec4899, #f97316, #6366f1);
+            padding: 2px;
+            flex: 0 0 auto;
+        }
+
+        .brand-logo-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: radial-gradient(circle at 20% 0, #f9fafb, #e5e7eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .brand-text-main { font-size: 17px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+        .brand-text-sub { font-size: 11px; opacity: 0.7; }
+
+        .tag-pill {
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
+        .tag-dot { width: 6px; height: 6px; border-radius: 999px; background: #a5b4fc; }
+
+        /* 배너: 절대배치 제거 -> 흐름 배치 (전체화면 비율 안정화) */
+        .hero-banner {
+            width: 100%;
+            height: 250px;
+            border-radius: 28px;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.38);
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(4px);
+            position: relative;
+            margin-bottom: 18px;
+        }
+
+        @media (min-width: 1440px) {
+            .hero-banner {
+                height: 270px;
+            }
+        }
+
+        .hero-banner-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            transform: scale(1.02);
+        }
+
+        .hero-banner-badge {
+            position: absolute;
+            left: 14px;
+            top: 14px;
+            width: 150px;
+            height: 60px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            background: rgba(2, 6, 23, 0.35);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .hero-banner-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transform: scale(1.5);
+            display: block;
+            filter: grayscale(1) contrast(1.05) brightness(1.2);
+            opacity: 0.92;
+        }
+
+        .hero-block {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 22px;
+            max-width: 420px; /* 조금 늘림 */
+        }
+
+        .hero-title { font-size: 26px; line-height: 1.3; font-weight: 700; margin-bottom: 8px; }
+
+        .hero-title .highlight {
+            background: linear-gradient(120deg, #f97316, #ec4899, #6366f1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #e5e7eb;
+            max-width: 360px;
+            opacity: 0.85;
+        }
+
+        .skin-tags {
+            display: grid;
+            grid-template-columns: repeat(2, auto);
+            row-gap: 8px;
+            column-gap: 12px;
+            margin-top: 14px;
+        }
+
+        .skin-tag {
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            padding: 5px 9px;
+            font-size: 11px;
+            color: #e5e7eb;
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .gradient-strip {
+            margin-top: 18px;
+            height: 46px;
+            border-radius: 16px;
+            background: linear-gradient(
+                120deg,
+                rgba(129, 140, 248, 0.18),
+                rgba(236, 72, 153, 0.18),
+                rgba(251, 146, 60, 0.16)
+            );
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            font-size: 11px;
+            color: #e5e7eb;
+            gap: 10px;
+            position: relative;
+            z-index: 2;
+            flex-wrap: wrap;
+        }
+
+        .gradient-strip span strong { color: #f9fafb; }
+
+        /* --- 오른쪽 패널 --- */
+        .right-panel {
+            background: #ffffffee;
+            backdrop-filter: blur(26px);
+            border-radius: 24px;
+            padding: 22px 22px 26px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+            border: 1px solid rgba(209, 213, 219, 0.8);
+        }
+
+        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .section-caption { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .controls { grid-template-columns: minmax(0, 1fr); }
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 12px;
+            color: #4b5563;
+        }
+
+        .field label { font-weight: 500; }
+
+        select, input[type="number"] {
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid #d4d4dd;
+            outline: none;
+            font-size: 13px;
+            background: #f9fafb;
+            transition:
+                border-color 0.15s ease,
+                box-shadow 0.15s ease,
+                background-color 0.15s;
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.18);
+            background: #ffffff;
+        }
+
+        .btn-primary {
+            margin-left: auto;
+            align-self: flex-end;
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 14px 30px rgba(79, 70, 229, 0.4);
+            transition:
+                transform 0.1s ease,
+                box-shadow 0.1s ease,
+                opacity 0.1s;
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 18px 40px rgba(79, 70, 229, 0.5); }
+        .btn-primary:active { transform: translateY(0); box-shadow: 0 10px 20px rgba(79, 70, 229, 0.35); opacity: 0.95; }
+        .btn-icon { font-size: 14px; }
+
+        .concerns-block {
+            margin-bottom: 14px;
+            padding: 12px 12px;
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+        }
+
+        .concerns-title {
+            font-size: 12px;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .concerns-hint {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 400;
+        }
+
+        .concerns-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        @media (max-width: 640px) {
+            .concerns-grid { grid-template-columns: minmax(0, 1fr); }
+        }
+
+        .concern-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            font-size: 12px;
+            color: #374151;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease, background-color 0.1s ease, border-color 0.1s ease;
+        }
+
+        .concern-pill:hover { transform: translateY(-1px); border-color: #c7d2fe; background: #ffffff; }
+        .concern-pill input { accent-color: #6366f1; }
+
+        .recommend-row {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0 14px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #6b7280;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .results-header strong { color: #111827; }
+        #statusText { font-size: 11px; }
+
+        #results { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+
+        .item-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 12px 14px 10px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+            transition:
+                transform 0.1s ease,
+                box-shadow 0.1s ease,
+                border-color 0.1s ease,
+                background-color 0.1s;
+            cursor: pointer;
+        }
+
+        .item-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
+            border-color: #c7d2fe;
+            background: #f9fafb;
+        }
+
+        .thumb {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+            background: #f3f4f6;
+            flex: 0 0 auto;
+        }
+
+        .rank-chip {
+            min-width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-top: 2px;
+            flex: 0 0 auto;
+        }
+
+        .item-main { flex: 1; }
+        .product-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; color: #111827; }
+        .brand { font-size: 12px; color: #6b7280; margin-bottom: 3px; }
+        .score { font-size: 11px; color: #6b7280; }
+        .score strong { color: #111827; }
+        .empty-state { margin-top: 16px; font-size: 12px; color: #9ca3af; }
+        .error { margin-top: 10px; font-size: 12px; color: #b91c1c; }
+
+        .loading {
+            font-size: 12px;
+            color: #6b7280;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #6366f1;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(0.7); opacity: 0.7; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <aside class="left-panel">
+        <div class="brand-row">
+            <div class="brand-mark">
+                <div class="brand-logo">
+                    <div class="brand-logo-inner">S</div>
+                </div>
+                <div>
+                    <div class="brand-text-main">SkinMatch</div>
+                    <div class="brand-text-sub">Sephora skincare intelligence</div>
+                </div>
+            </div>
+            <div class="tag-pill">
+                <span class="tag-dot"></span>
+                피부타입 맞춤 추천
+            </div>
+        </div>
+
+        <div class="hero-banner">
+            <img class="hero-banner-bg" src="skincare nature.jpg" alt="스킨케어 배너 이미지">
+            <div class="hero-banner-badge">
+                <img src="sephora-logo.jpg" alt="Sephora Logo">
+            </div>
+        </div>
+
+        <div class="hero-block">
+            <div class="hero-title">
+                내 피부에 맞는<br>
+                <span class="highlight">프리미엄 스킨케어</span> 추천
+            </div>
+            <div class="hero-subtitle">
+                세포라 제품 기반 성분·피부타입 분석으로,
+                복합성부터 지성까지 나에게 맞는 제품을 골라 보여줍니다.
+            </div>
+
+            <div class="skin-tags">
+                <div class="skin-tag">복합성 · Combination</div>
+                <div class="skin-tag">건성 · Dry</div>
+                <div class="skin-tag">중성 · Normal</div>
+                <div class="skin-tag">지성 · Oily</div>
+            </div>
+        </div>
+
+        <div class="gradient-strip">
+            <span><strong>성분 중심</strong>으로 피부타입별 추천</span>
+            <span><strong>피부 고민</strong> 해결을 위한 맞춤형 추천</span>
+        </div>
+    </aside>
+
+    <main class="right-panel">
+        <div class="section-title">스킨케어 추천 받기</div>
+        <div class="section-caption">
+            피부타입, 카테고리, 피부 고민을 선택하면 해당 조건에 가장 잘 맞는 제품을 상위 순위로 보여줍니다.
+        </div>
+
+        <div class="controls">
+            <div class="field">
+                <label for="skinType">피부타입</label>
+                <select id="skinType">
+                    <option value="combination">복합성</option>
+                    <option value="dry">건성</option>
+                    <option value="normal">중성</option>
+                    <option value="oily">지성</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="category">카테고리</label>
+                <select id="category">
+                    <option value="all">전체</option>
+                    <option value="cleanser">클렌저 / 폼</option>
+                    <option value="toner">토너 / 패드</option>
+                    <option value="serum">세럼 / 앰플</option>
+                    <option value="cream">크림 / 로션</option>
+                    <option value="mask">마스크 / 팩</option>
+                    <option value="sunscreen">선크림</option>
+                    <option value="other">기타</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="topK">추천 개수 (Top-K)</label>
+                <input id="topK" type="number" value="10" min="1" max="50">
+            </div>
+        </div>
+
+        <div class="concerns-block">
+            <div class="concerns-title">
+                <div>피부 고민 (복수 선택)</div>
+                <div class="concerns-hint">선택한 고민은 성분 키워드 기반으로 재정렬에 반영됩니다.</div>
+            </div>
+            <div class="concerns-grid" id="concerns">
+                <label class="concern-pill"><input type="checkbox" value="acne"> 여드름/트러블 (acne)</label>
+                <label class="concern-pill"><input type="checkbox" value="sensitive"> 민감/장벽 (sensitive)</label>
+                <label class="concern-pill"><input type="checkbox" value="brightening"> 미백/톤 (brightening)</label>
+                <label class="concern-pill"><input type="checkbox" value="wrinkle"> 주름/탄력 (wrinkle)</label>
+                <label class="concern-pill"><input type="checkbox" value="pore_sebum"> 모공/피지 (pore_sebum)</label>
+            </div>
+        </div>
+
+        <div class="recommend-row">
+            <button class="btn-primary" onclick="recommend()">
+                <span class="btn-icon">👍</span>
+                추천받기
+            </button>
+        </div>
+
+        <div class="results-header">
+            <span>
+                선택된 피부타입:
+                <strong id="selectedSkinLabel">복합성</strong> ·
+                카테고리:
+                <strong id="selectedCategoryLabel">전체</strong>
+            </span>
+            <span id="statusText"></span>
+        </div>
+
+        <div id="results"></div>
+        <div id="errorBox" class="error"></div>
+    </main>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+
+const skinLabelMap = {
+    combination: "복합성",
+    dry: "건성",
+    normal: "중성",
+    oily: "지성"
+};
+
+const categoryLabelMap = {
+    all: "전체",
+    cleanser: "클렌저 / 폼",
+    toner: "토너 / 패드",
+    serum: "세럼 / 앰플",
+    cream: "크림 / 로션",
+    mask: "마스크 / 팩",
+    sunscreen: "선크림",
+    other: "기타"
+};
+
+function getSelectedConcerns() {
+    const checked = Array.from(document.querySelectorAll('#concerns input[type="checkbox"]:checked'));
+    return checked.map(el => el.value);
+}
+
+async function recommend() {
+    const skinType = document.getElementById("skinType").value;
+    const category = document.getElementById("category").value;
+    const topK = parseInt(document.getElementById("topK").value, 10);
+    const concerns = getSelectedConcerns();
+
+    const selectedSkinLabel = document.getElementById("selectedSkinLabel");
+    const selectedCategoryLabel = document.getElementById("selectedCategoryLabel");
+    const resultsDiv = document.getElementById("results");
+    const errorBox = document.getElementById("errorBox");
+    const statusText = document.getElementById("statusText");
+
+    selectedSkinLabel.textContent = skinLabelMap[skinType] || skinType;
+    selectedCategoryLabel.textContent = categoryLabelMap[category] || category;
+
+    resultsDiv.innerHTML = "";
+    errorBox.textContent = "";
+    statusText.innerHTML =
+        '<span class="loading"><span class="loading-dot"></span>추천 계산 중...</span>';
+
+    const body = {
+        skin_type: skinType,
+        top_k: isNaN(topK) ? 10 : topK,
+        category: category,
+        concerns: concerns
+    };
+
+    try {
+        const res = await fetch(API_BASE + "/recommend", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            const detail = errData.detail || ("HTTP " + res.status);
+            throw new Error("API 오류: " + detail);
+        }
+
+        const data = await res.json();
+
+        if (!data.items || data.items.length === 0) {
+            resultsDiv.innerHTML =
+                '<div class="empty-state">해당 조건에 맞는 추천 결과가 없습니다.</div>';
+            statusText.textContent = "0개 추천";
+            return;
+        }
+
+        data.items.forEach((item, idx) => {
+            const card = document.createElement("div");
+            card.className = "item-card";
+
+            card.addEventListener("click", () => {
+                const pid = encodeURIComponent(item.product_id);
+                window.location.href = `product.html?product_id=${pid}&from=index2.html`;
+            });
+
+            const imgHtml = item.image_url
+                ? `<img class="thumb" src="${item.image_url}" alt="product" loading="lazy">`
+                : `<div class="thumb"></div>`;
+
+            card.innerHTML = `
+                <div class="rank-chip">${idx + 1}</div>
+                ${imgHtml}
+                <div class="item-main">
+                    <div class="product-name">${item.product_name}</div>
+                    <div class="brand">브랜드: ${item.brand_name}</div>
+                    <div class="score">적합도 점수: <strong>${Number(item.score).toFixed(4)}</strong></div>
+                </div>
+            `;
+            resultsDiv.appendChild(card);
+        });
+
+        statusText.textContent = data.items.length + "개 추천";
+    } catch (err) {
+        console.error(err);
+        errorBox.textContent = "요청 중 오류가 발생했습니다: " + (err?.message || String(err));
+        statusText.textContent = "";
+    }
+}
+</script>
+
+</body>
+</html>

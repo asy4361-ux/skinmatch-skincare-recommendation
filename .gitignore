@@ -1,0 +1,47 @@
+# =========================
+# Data & Outputs
+# =========================
+data/
+*.csv
+*.parquet
+
+# =========================
+# Model / Weights / Checkpoints
+# =========================
+skin_ingredient_distilbert_multi_v2/
+skin_bert_checkpoints/
+*.pt
+*.bin
+*.safetensors
+*.joblib
+*.pkl
+
+# =========================
+# Python cache
+# =========================
+__pycache__/
+*.pyc
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+*.ipynb
+
+# =========================
+# Environment
+# =========================
+.env
+.venv/
+venv/
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+.vscode/
+
+# =========================
+# Logs
+# =========================
+*.log
